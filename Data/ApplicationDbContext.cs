@@ -10,4 +10,5 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Employee> Employee => Set<Employee>();
     public DbSet<Users> Users => Set<Users>();
+    public DbSet<Department> Department => Set<Department>();
 }

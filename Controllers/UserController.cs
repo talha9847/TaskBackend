@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TaskBackend.Interfaces;
+using TaskBackend.Services;
 
 namespace TaskBackend.Controllers;
 
@@ -10,10 +11,12 @@ namespace TaskBackend.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserInterface _userRepo;
+    private readonly JwtService _jwtService;
 
-    public UserController(IUserInterface userRepo)
+    public UserController(IUserInterface userRepo, JwtService jwtService)
     {
         _userRepo = userRepo;
+        _jwtService = jwtService;
     }
 
 
@@ -25,7 +28,8 @@ public class UserController : ControllerBase
         {
             return BadRequest(new { message = "Invalid Credentials" });
         }
-        return Ok(new { message = "Login Successfully", user.Role });
+        var token = await _jwtService.JwtGeneration(user.Id, user.Role ?? "");
+        return Ok(new { message = "Login Successfully", user.Role, token });
     }
 }
 
