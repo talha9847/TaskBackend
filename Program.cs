@@ -1,9 +1,19 @@
+using Microsoft.EntityFrameworkCore;
+using TaskBackend.Data;
+using TaskBackend.Implementations;
+using TaskBackend.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddScoped<IUserInterface, UserRepo>();
+
 
 var app = builder.Build();
 

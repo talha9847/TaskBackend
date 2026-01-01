@@ -62,3 +62,12 @@ ON e.deptid=d.id
 GROUP BY d.name 
 ORDER BY employee_count DESC
 LIMIT 1
+
+
+CREATE TABLE users (id SERIAL PRIMARY KEY,
+email VARCHAR NOT NULL UNIQUE,
+password VARCHAR NOT NULL,
+role VARCHAR NOT NULL CHECK (role IN ('Admin','User'))
+)
+
+INSERT INTO users (email,password,role) VALUES('admin@gmail.com','Admin@123','Admin'),('user@gmail.com','User@123','User')
