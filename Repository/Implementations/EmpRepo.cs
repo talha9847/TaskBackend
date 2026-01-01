@@ -20,6 +20,7 @@ public class EmpRepo : IEmpInterface
                         from e in _context.Employee
                         join d in _context.Department
                             on e.DeptId equals d.Id
+                        where e.isDeleted == false
                         select new Employee
                         {
                             Id = e.Id,
@@ -58,13 +59,71 @@ public class EmpRepo : IEmpInterface
     {
         try
         {
-            var emp = await _context.Employee.FindAsync(empId);
+            var emp = await _context.Employee.Where(e => e.isDeleted == false && e.Id == empId).FirstOrDefaultAsync();
             return emp;
         }
         catch (System.Exception ex)
         {
             System.Console.WriteLine("Error: " + ex.Message);
             return null;
+        }
+    }
+
+    public async Task<int> UpdateEmp(Employee emp)
+    {
+        try
+        {
+            var existingEmp = await _context.Employee.FindAsync(emp.Id);
+            if (existingEmp == null)
+            {
+                return -1;
+            }
+            existingEmp.Name = emp.Name;
+            existingEmp.DeptId = emp.DeptId;
+            existingEmp.DateOfJoin = emp.DateOfJoin;
+            existingEmp.Salary = emp.Salary;
+            existingEmp.YOE = emp.YOE;
+
+            return await _context.SaveChangesAsync();
+
+        }
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine("Error: " + ex.Message);
+            return -1;
+        }
+    }
+
+    public async Task<List<Employee>?> GetEmpByDeptById(int deptId)
+    {
+        try
+        {
+            var emp = await _context.Employee.Where(e => e.DeptId == deptId && e.isDeleted == false).ToListAsync();
+            return emp;
+        }
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine("Error: " + ex.Message);
+            return null;
+        }
+    }
+    
+    public async Task<int> DeleteEmp(int empId)
+    {
+        try
+        {
+            var emp = await _context.Employee.Where(e => e.isDeleted == false && e.Id == empId).FirstOrDefaultAsync();
+            if (emp == null)
+            {
+                return 0;
+            }
+            emp.isDeleted = true;
+            return await _context.SaveChangesAsync();
+        }
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine("Error: " + ex.Message);
+            return -1;
         }
     }
 }

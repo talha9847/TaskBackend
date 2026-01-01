@@ -19,7 +19,8 @@ public class Employee
     public double Salary { get; set; }
     [Column("yoe")]
     public int YOE { get; set; }
-
+    [Column("isdeleted")]
+    public bool isDeleted { get; set; } = false;
     [NotMapped]
     public string? DepartmentName { get; set; }
 }

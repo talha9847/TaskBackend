@@ -8,7 +8,8 @@ DeptId INT NOT NULL REFERENCES departments(id),
 name VARCHAR NOT NULL,
 DateOfJoin date NOT NULL,
 salary NUMERIC (12,2) NOT NULL,
-YOE INT
+YOE INT,
+IsDeleted BOOL DEFAULT FALSE
 )
 
 INSERT INTO employee (DeptId, name, DateOfJoin, salary, YOE) VALUES
