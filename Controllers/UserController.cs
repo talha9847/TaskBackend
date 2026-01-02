@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TaskBackend.Interfaces;
+using TaskBackend.Models;
 using TaskBackend.Services;
 
 namespace TaskBackend.Controllers;
@@ -21,9 +22,9 @@ public class UserController : ControllerBase
 
 
     [HttpPost("Login")]
-    public async Task<IActionResult> Login(string email, string password)
+    public async Task<IActionResult> Login(LoginModel login)
     {
-        var user = await _userRepo.Login(email, password);
+        var user = await _userRepo.Login(login.Email ?? "", login.Password ?? "");
         if (user == null)
         {
             return BadRequest(new { message = "Invalid Credentials" });

@@ -18,18 +18,32 @@ public class EmpController : ControllerBase
         _empRepo = empRepo;
     }
 
-    // [Authorize(Roles = "Admin,User")]
-    [HttpGet("fetchemployees")]
-    public async Task<IActionResult> GetAllEmployees()
+    [Authorize(Roles = "Admin,User")]
+    [HttpGet("fetchemployees/{deptId}/{page}/{pageSize}")]
+    public async Task<IActionResult> GetAllEmployees(int deptId = 0, int page = 1, int pageSize = 10, string sortBy = "id", string orderBy = "asc")
     {
-        var employees = await _empRepo.GetAllEmp();
-        if (employees == null)
+        System.Console.WriteLine(orderBy);
+        var employees = await _empRepo.GetAllEmp(deptId, page, pageSize, sortBy, orderBy);
+
+        if (employees == null || !employees.Any())
         {
-            return BadRequest(new { message = "No emp found", success = false });
+            return NotFound(new { message = "No employees found", success = false });
         }
-        return Ok(new { message = "Employee getting successfully", success = true, employees });
+
+        var totalCount = await _empRepo.GetEmployeeCount(deptId);
+
+        return Ok(new
+        {
+            message = "Employees loaded successfully",
+            success = true,
+            employees,
+            page,
+            pageSize,
+            totalCount,
+            totalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+        });
     }
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpPost("AddEmployee")]
     public async Task<IActionResult> AddEmp(Employee employee)
     {
@@ -42,7 +56,7 @@ public class EmpController : ControllerBase
 
     }
 
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet("GetEmpById/{empId}")]
     public async Task<IActionResult> GetEmpById(int empId)
     {
@@ -54,19 +68,21 @@ public class EmpController : ControllerBase
         return Ok(new { message = "Employee getting successfull", emp, success = true });
     }
 
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpPut("UpdateEmp")]
     public async Task<IActionResult> UpdateEmp(Employee emp)
     {
+        emp.DeptId = Convert.ToInt32(emp.DeptId);
+
         var result = await _empRepo.UpdateEmp(emp);
-        if (result == 1)
+        if (result >= 0)
         {
             return Ok(new { message = "Employee Updated successfully", success = true });
         }
         return BadRequest(new { message = "Errorr in updating Employee", success = false });
     }
 
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpGet("GetEmpByDeptById/{deptId}")]
     public async Task<IActionResult> GetEmpByDeptId(int deptId)
     {
@@ -79,7 +95,7 @@ public class EmpController : ControllerBase
 
     }
 
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [HttpDelete("DeleteEmp/{empId}")]
     public async Task<IActionResult> DeleteEmp(int empId)
     {
@@ -89,6 +105,18 @@ public class EmpController : ControllerBase
             return Ok(new { message = "Employees deleted successfully", success = true, });
         }
         return BadRequest(new { message = "Errorr in getting Employees", success = false });
+    }
+    [HttpGet("GetAllDept")]
+    public async Task<IActionResult> GetAllDepartments()
+    {
+        var depts = await _empRepo.GetAllDepartments();
+        if (depts == null)
+        {
+            return BadRequest(new { message = "Errorr in getting depts", success = false });
+
+        }
+        return Ok(new { message = "Depts loaded successfully", success = true, depts });
+
     }
 
 }

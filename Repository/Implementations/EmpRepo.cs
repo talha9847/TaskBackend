@@ -12,12 +12,12 @@ public class EmpRepo : IEmpInterface
     {
         _context = context;
     }
-    public async Task<List<Employee>?> GetAllEmp()
+    public async Task<List<Employee>?> GetAllEmp(int deptId = 0, int page = 1, int pageSize = 10, string sortBy = "id",
+    string sortOrder = "asc")
     {
         try
         {
-            var employees = await (
-                        from e in _context.Employee
+            var query = from e in _context.Employee
                         join d in _context.Department
                             on e.DeptId equals d.Id
                         where e.isDeleted == false
@@ -30,16 +30,47 @@ public class EmpRepo : IEmpInterface
                             YOE = e.YOE,
                             DepartmentName = d.Name,
                             DeptId = e.DeptId
-                        }).ToListAsync();
+                        };
+
+            if (deptId > 0)
+            {
+                query = query.Where(e => e.DeptId == deptId);
+            }
+
+
+            query = sortBy.ToLower() switch
+            {
+                "name" => sortOrder == "desc"
+                    ? query.OrderByDescending(e => e.Name)
+                    : query.OrderBy(e => e.Name),
+
+                "salary" => sortOrder == "desc"
+                    ? query.OrderByDescending(e => e.Salary)
+                    : query.OrderBy(e => e.Salary),
+
+                "yoe" => sortOrder == "desc"
+                    ? query.OrderByDescending(e => e.YOE)
+                    : query.OrderBy(e => e.YOE),
+
+                _ => sortOrder == "desc"
+                    ? query.OrderByDescending(e => e.Id)
+                    : query.OrderBy(e => e.Id)
+            };
+
+            var employees = await query
+             .Skip((page - 1) * pageSize)
+             .Take(pageSize)
+             .ToListAsync();
 
             return employees;
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            System.Console.WriteLine("Error: " + ex.Message);
+            Console.WriteLine("Error: " + ex.Message);
             return null;
         }
     }
+
 
     public async Task<int> AddEmp(Employee employee)
     {
@@ -107,7 +138,7 @@ public class EmpRepo : IEmpInterface
             return null;
         }
     }
-    
+
     public async Task<int> DeleteEmp(int empId)
     {
         try
@@ -126,4 +157,29 @@ public class EmpRepo : IEmpInterface
             return -1;
         }
     }
+
+
+    public async Task<List<Department>?> GetAllDepartments()
+    {
+        try
+        {
+            var depts = await _context.Department.ToListAsync();
+            return depts;
+        }
+        catch (System.Exception ex)
+        {
+            System.Console.WriteLine("Erorr: " + ex.Message);
+            return null;
+        }
+    }
+
+    public async Task<int> GetEmployeeCount(int deptId = 0)
+    {
+        var query = _context.Employee.Where(e => !e.isDeleted);
+        if (deptId > 0)
+            query = query.Where(e => e.DeptId == deptId);
+
+        return await query.CountAsync();
+    }
+
 }
